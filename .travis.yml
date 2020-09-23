@@ -1,0 +1,23 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t shavera/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true shavera/react-test npm test
+
+after_success:
+    - docker build -t shavera/multi-client ./client
+    - docker build -t shavera/multi-nginx ./nginx
+    - docker build -t shavera/multi-server ./server
+    - docker build -t shavera/multi-worker ./worker
+    # Log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --pasword-stdin
+    # Push images to docker hub
+    - docker push shavera/multi-client
+    - docker push shavera/multi-nginx
+    - docker push shavera/multi-server
+    - docker push shavera/multi-worker
+    
